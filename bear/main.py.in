@@ -127,10 +127,11 @@ CompilationCommand = collections.namedtuple(
 
 class Category:
 
-    def __init__(self, only_use, c_compilers, cxx_compilers):
+    def __init__(self, only_use, c_compilers, cxx_compilers, additional_flags=None):
         self.ignore = only_use
         self.c_compilers = [os.path.basename(cc) for cc in c_compilers]
         self.cxx_compilers = [os.path.basename(cc) for cc in cxx_compilers]
+        self.additional_flags = additional_flags
 
     def is_wrapper(self, cmd):
         # type: (Category, str) -> bool
@@ -287,7 +288,7 @@ def intercept_build():
     """ Entry point for 'intercept-build' command. """
 
     args = parse_args_for_intercept_build()
-    category = Category(args.use_only, args.use_cc, args.use_cxx)
+    category = Category(args.use_only, args.use_cc, args.use_cxx, args.add_flags)
     exit_code, current = capture(args, category)
 
     # To support incremental builds, it is desired to read elements from
@@ -470,6 +471,12 @@ def create_intercept_parser():
         default="@DEFAULT_PRELOAD_FILE@",
         action='store',
         help="""specify libear file location.""")
+    advanced.add_argument(
+        '--append-arg', '-D',
+        dest='add_flags',
+        default=[],
+        action='append',
+        help="""Specify additional compilation flags to add to each compilation unit.""")
 
     parser.add_argument(
         dest='build', nargs=argparse.REMAINDER, help="""Command to run.""")
@@ -639,6 +646,9 @@ class Compilation:
             # and consider everything else as compile option.
             else:
                 result.flags.append(arg)
+        # Add additional_flags
+        if category.additional_flags:
+            result.flags.extend(category.additional_flags)
         logging.debug('output is: %s', result)
         # do extra check on number of source files
         return result if result.files else None

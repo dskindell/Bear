@@ -60,6 +60,10 @@ writes the output file.
 -l *path*, \--libear *path*
 :	Specify the preloaded library location. (Default value provided.)
 
+-D, \--append-arg *ADD_FLAGS*
+:	Specify additional compilation flags to add to each
+	compilation unit. (default: [])
+
 # OUTPUT
 
 The JSON compilation database definition changed over time. The current
